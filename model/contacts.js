@@ -21,7 +21,7 @@ const addContact = async (body) => {
   // if (typeof body["favorite"] === "undefined") {
   //   Object.assign(body, favoriteDefault);
   // }
-  const record = { ...body, ...(body.favorite ? {} : { favorite: false }) };
+  // const record = { ...body, ...(body.favorite ? {} : { favorite: false }) };
   const result = await Contact.create(record);
   return result;
 };
