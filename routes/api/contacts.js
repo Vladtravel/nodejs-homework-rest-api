@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { validateContact, validateFavorite } = require("./validation");
+const { validateContact, validateFavorite } = require("../../validation/validation");
 const contactsController = require("../../controllers/contacts");
 
 router.get("/", contactsController.listContacts).post("/", validateContact, contactsController.addContact);
