@@ -1,4 +1,5 @@
 const Contact = require("./schemas/contact");
+
 const listContacts = async () => {
   const results = await Contact.find({});
   return results;
@@ -17,12 +18,7 @@ const removeContact = async (contactId) => {
 };
 
 const addContact = async (body) => {
-  // const favoriteDefault = { favorite: false };
-  // if (typeof body["favorite"] === "undefined") {
-  //   Object.assign(body, favoriteDefault);
-  // }
-  // const record = { ...body, ...(body.favorite ? {} : { favorite: false }) };
-  const result = await Contact.create(record);
+  const result = await Contact.create(body);
   return result;
 };
 
