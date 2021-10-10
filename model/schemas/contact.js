@@ -22,7 +22,17 @@ const contactsScheme = new Schema(
       default: false,
     },
   },
-  { versionKey: false }
+  {
+    versionKey: false,
+    timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: {
+      virtuals: true,
+      transform: function (doc, ret) {
+        delete ret._id;
+        return ret;
+      },
+    }, }
 );
 const Contact = model("contact", contactsScheme);
 module.exports = Contact;
