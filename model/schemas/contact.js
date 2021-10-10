@@ -32,7 +32,17 @@ const contactsScheme = new Schema(
         delete ret._id;
         return ret;
       },
-    }, }
+    },
+  }
 );
+
+contactsScheme.virtual("status").get(function () {
+  if (this.favorite) {
+    return "favorite contact";
+  }
+
+  return "not favorite contact";
+});
+
 const Contact = model("contact", contactsScheme);
 module.exports = Contact;
