@@ -3,13 +3,16 @@ const router = express.Router();
 
 const { validateContact, validateFavorite } = require("../../validation/validation");
 const contactsController = require("../../controllers/contacts");
-
-router.get("/", contactsController.listContacts).post("/", validateContact, contactsController.addContact);
+const guard = require("../../service/guard");
 
 router
-  .get("/:contactId", contactsController.getContactById)
-  .delete("/:contactId", contactsController.removeContact)
-  .patch("/:contactId", validateContact, contactsController.updateContact)
-  .patch("/:contactId/favorite", validateFavorite, contactsController.updateStatusContact);
+  .get("/", guard, contactsController.listContacts)
+  .post("/", guard, validateContact, contactsController.addContact);
+
+router
+  .get("/:contactId", guard, contactsController.getContactById)
+  .delete("/:contactId", guard, contactsController.removeContact)
+  .patch("/:contactId", guard, validateContact, contactsController.updateContact)
+  .patch("/:contactId/favorite", guard, validateFavorite, contactsController.updateStatusContact);
 
 module.exports = router;
