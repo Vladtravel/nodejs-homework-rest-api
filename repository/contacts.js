@@ -1,5 +1,4 @@
 const Contact = require("../model/schemas/contact");
-gg;
 
 const listContacts = async (userId, { limit = 10, page = 1, favorite }) => {
   const result = await Contact.paginate(
