@@ -82,6 +82,7 @@ const currentUser = async (req, res, next) => {
   const id = req.user.id;
   try {
     const user = await Users.findById(id);
+
     return res.status(HttpCode.OK).json({
       status: "success",
       code: HttpCode.OK,

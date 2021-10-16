@@ -1,17 +1,24 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require("mongoose-paginate-v2");
 
 const { Schema, model, SchemaTypes } = mongoose;
 
-const contactsScheme = new Schema(
+const contactSchema = new Schema(
   {
     name: {
       type: String,
       required: [true, "Name is required"],
+      minLength: 2,
+      maxLength: 30,
     },
     email: {
       type: String,
       required: [true, "Email is required"],
       unique: true,
+      validate(value) {
+        const reg = /\S+@\S+\.\S+/;
+        return reg.test(String(value).toLowerCase());
+      },
     },
     phone: {
       type: String,
@@ -40,13 +47,16 @@ const contactsScheme = new Schema(
   }
 );
 
-contactsScheme.virtual("status").get(function () {
-  if (this.favorite) {
-    return "favorite contact";
-  }
+contactSchema
+  .plugin(mongoosePaginate)
+  .virtual("status")
+  .get(function () {
+    if (this.favorite) {
+      return "favorite contact";
+    }
 
-  return "not favorite contact";
-});
+    return "not favorite contact";
+  });
+const Contact = model("contact", contactSchema);
 
-const Contact = model("contact", contactsScheme);
 module.exports = Contact;
