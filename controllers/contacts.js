@@ -2,19 +2,6 @@ const Contacts = require("../repository/contacts");
 const { HttpCode } = require("../service/constants");
 
 const listContacts = async (req, res, next) => {
-  // try {
-  //   const userId = req.user.id;
-  //   const contacts = await Contacts.listContacts(userId, req.query);
-  //   return res.json({
-  //     status: "Success",
-  //     code: HttpCode.OK,
-  //     data: {
-  //       contacts,
-  //     },
-  //   });
-  // } catch (error) {
-  //   next(error);
-  // }
   try {
     const userId = req.user.id;
     const { docs: contacts, totalDocs: total, page, limit } = await Contacts.listContacts(userId, req.query);
