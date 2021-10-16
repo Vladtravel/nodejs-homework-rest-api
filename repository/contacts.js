@@ -1,11 +1,22 @@
 const Contact = require("../model/schemas/contact");
 
-const listContacts = async (userId, query) => {
-  const results = await Contact.find({ owner: userId }).populate({
-    path: "owner",
-    select: "name email subscription -_id",
-  });
-  return results;
+const listContacts = async (userId, { limit = 10, page = 1, favorite }) => {
+  const result = await Contact.paginate(
+    { owner: userId },
+    {
+      limit,
+      page,
+      populate: { path: "owner", select: "subscription email " },
+    }
+  );
+  if (favorite) {
+    const findFavorite = await Contact.find({ favorite }).populate({
+      path: "owner",
+      select: "subscription email ",
+    });
+    return { docs: findFavorite };
+  }
+  return result;
 };
 
 const getContactById = async (contactId, userId) => {
