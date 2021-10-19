@@ -10,8 +10,8 @@ const listContacts = async (req, res, next) => {
       code: HttpCode.OK,
       data: { contacts, limit, page, total },
     });
-  } catch (error) {
-    next(error);
+  } catch (e) {
+    next(e);
   }
 };
 
@@ -35,8 +35,8 @@ const getContactById = async (req, res, next) => {
         message: "Not found",
       });
     }
-  } catch (error) {
-    next(error);
+  } catch (e) {
+    next(e);
   }
 };
 
@@ -53,8 +53,8 @@ const addContact = async (req, res, next) => {
         contact,
       },
     });
-  } catch (error) {
-    next(error);
+  } catch (e) {
+    next(e);
   }
 };
 
@@ -79,8 +79,8 @@ const removeContact = async (req, res, next) => {
         message: "Not found",
       });
     }
-  } catch (error) {
-    next(error);
+  } catch (e) {
+    next(e);
   }
 };
 
@@ -105,8 +105,8 @@ const updateContact = async (req, res, next) => {
         message: "Not found",
       });
     }
-  } catch (error) {
-    next(error);
+  } catch (e) {
+    next(e);
   }
 };
 
@@ -133,8 +133,8 @@ const updateStatusContact = async (req, res, next) => {
         message: "missing field favorite",
       });
     }
-  } catch (error) {
-    next(error);
+  } catch (e) {
+    next(e);
   }
 };
 
