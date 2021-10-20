@@ -1,8 +1,21 @@
 const jwt = require("jsonwebtoken");
 const Users = require("../repository/users");
 const { HttpCode } = require("../service/constants");
+const jimp = require("jimp");
+const fs = require("fs/promises");
+const path = require("path");
 require("dotenv").config();
+const { promisify } = require("util");
+const cloudinary = require("cloudinary").v2;
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY_CLOUD,
+  api_secret: process.env.API_SECRET_CLOUD,
+});
+
+const uploadToCloud = promisify(cloudinary.uploader.upload);
 
 const signup = async (req, res, next) => {
   try {
@@ -25,11 +38,12 @@ const signup = async (req, res, next) => {
         user: {
           email: newUser.email,
           subscription: newUser.subscription,
+          avatarURL: newUser.avatarURL,
         },
       },
     });
-  } catch (error) {
-    next(error);
+  } catch (e) {
+    next(e);
   }
 };
 
@@ -48,7 +62,7 @@ const login = async (req, res, next) => {
     }
     const id = user._id;
     const payload = { id };
-    const token = jwt.sign(payload, JWT_SECRET_KEY, { expiresIn: "2h" });
+    const token = jwt.sign(payload, JWT_SECRET_KEY, { expiresIn: "4h" });
     await Users.updateToken(id, token);
     return res.status(HttpCode.OK).json({
       status: "success",
@@ -124,4 +138,71 @@ const updateSub = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, logout, currentUser, updateSub };
+const updateAvatar = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+
+    const { idCloudAvatar, avatarUrl } = await saveAvatarUserToCloud(req);
+
+    await Users.updateAvatar(id, avatarUrl, idCloudAvatar);
+    return res.status(HttpCode.OK).json({
+      status: HttpCode.OK,
+      ContentType: res.ContentType,
+      ResponseBody: {
+        avatarUrl,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// const saveAvatarUser = async (req) => {
+//   const FOLDER_AVATARS = process.env.FOLDER_AVATARS;
+//   const pathFile = req.file.path;
+//   const newNameAvatar = `${Date.now().toString()}-${req.file.originalname}`;
+//   const img = await jimp.read(pathFile);
+//   await img
+//     .autocrop()
+//     .cover(250, 250, jimp.HORIZONTAL_ALIGN_CENTER | jimp.VERTICAL_ALIGN_MIDDLE)
+//     .writeAsync(pathFile);
+//   try {
+//     await fs.rename(pathFile, path.join(process.cwd(), "public", FOLDER_AVATARS, newNameAvatar));
+//   } catch (e) {
+//     console.log(e.message);
+//   }
+
+//   const oldAvatar = req.user.avatarURL;
+//   console.log("oldAvatar", oldAvatar);
+//   if (oldAvatar.includes(`${FOLDER_AVATARS}/`)) {
+//     await fs.unlink(path.join(process.cwd(), "public", oldAvatar));
+//   }
+
+//   return path.join(FOLDER_AVATARS, newNameAvatar).replace("\\", "/");
+// };
+
+const saveAvatarUserToCloud = async (req) => {
+  try {
+    const pathFile = req.file.path;
+    const { public_id: idCloudAvatar, secure_url: avatarUrl } = await uploadToCloud(pathFile, {
+      public_id: req.user.idCloudAvatar?.replace("Avatars/", ""),
+      folder: "Avatars",
+      transformation: { width: 250, height: 250, crop: "pad" },
+    });
+    await fs.unlink(pathFile);
+    return { idCloudAvatar, avatarUrl };
+  } catch (e) {
+    console.log(e.message);
+  }
+};
+
+module.exports = {
+  signup,
+  login,
+  logout,
+  currentUser,
+  updateSub,
+  updateAvatar,
+  // saveAvatarUser,
+  saveAvatarUserToCloud,
+};
