@@ -139,22 +139,18 @@ const updateSub = async (req, res, next) => {
 };
 
 const updateAvatar = async (req, res, next) => {
-  try {
-    const { id } = req.user;
+  const { id } = req.user;
 
-    const { idCloudAvatar, avatarUrl } = await saveAvatarUserToCloud(req);
+  const { idCloudAvatar, avatarUrl } = await saveAvatarUserToCloud(req);
 
-    await Users.updateAvatar(id, avatarUrl, idCloudAvatar);
-    return res.status(HttpCode.OK).json({
-      status: HttpCode.OK,
-      ContentType: res.ContentType,
-      ResponseBody: {
-        avatarUrl,
-      },
-    });
-  } catch (e) {
-    next(e);
-  }
+  await Users.updateAvatar(id, avatarUrl, idCloudAvatar);
+  return res.status(HttpCode.OK).json({
+    status: HttpCode.OK,
+    ContentType: res.ContentType,
+    ResponseBody: {
+      avatarUrl,
+    },
+  });
 };
 
 // const saveAvatarUser = async (req) => {
@@ -182,18 +178,14 @@ const updateAvatar = async (req, res, next) => {
 // };
 
 const saveAvatarUserToCloud = async (req) => {
-  try {
-    const pathFile = req.file.path;
-    const { public_id: idCloudAvatar, secure_url: avatarUrl } = await uploadToCloud(pathFile, {
-      public_id: req.user.idCloudAvatar?.replace("Avatars/", ""),
-      folder: "Avatars",
-      transformation: { width: 250, height: 250, crop: "pad" },
-    });
-    await fs.unlink(pathFile);
-    return { idCloudAvatar, avatarUrl };
-  } catch (e) {
-    console.log(e.message);
-  }
+  const pathFile = req.file.path;
+  const { public_id: idCloudAvatar, secure_url: avatarUrl } = await uploadToCloud(pathFile, {
+    public_id: req.user.idCloudAvatar?.replace("Avatars/", ""),
+    folder: "Avatars",
+    transformation: { width: 250, height: 250, crop: "pad" },
+  });
+  await fs.unlink(pathFile);
+  return { idCloudAvatar, avatarUrl };
 };
 
 module.exports = {
@@ -204,5 +196,5 @@ module.exports = {
   updateSub,
   updateAvatar,
   // saveAvatarUser,
-  saveAvatarUserToCloud,
+  // saveAvatarUserToCloud,
 };

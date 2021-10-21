@@ -25,6 +25,6 @@ router.post("/login", validateAuth, limiter, userController.login);
 router.post("/logout", guard, userController.logout);
 router.get("/current", guard, userController.currentUser);
 router.patch("/", guard, validateUpdateSub, userController.updateSub);
-router.patch("/avatars", guard, uploadAvatar.single("avatar"), userController.updateAvatar);
+router.patch("/avatars", uploadAvatar.single("avatar"), guard, userController.updateAvatar);
 
 module.exports = router;

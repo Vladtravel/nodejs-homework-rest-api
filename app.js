@@ -29,7 +29,12 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  res.status(err.status || HttpCode.INTERNAL_SERVER_ERROR).json({ message: err.message });
+  const status = err.status || HttpCode.INTERNAL_SERVER_ERROR;
+  res.status(status).json({
+    status: status === HttpCode.INTERNAL_SERVER_ERROR ? "fail" : "error",
+    code: status,
+    message: err.message,
+  });
 });
 
 module.exports = app;
