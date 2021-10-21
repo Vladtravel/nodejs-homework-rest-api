@@ -1,5 +1,6 @@
 const multer = require("multer");
 const path = require("path");
+const { HttpCode } = require("./constants");
 require("dotenv").config();
 const UPLOAD_DIR = path.join(process.cwd(), process.env.UPLOAD_DIR);
 
@@ -17,12 +18,11 @@ const upload = multer({
   limits: { fileSize: 2000000 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.includes("image")) {
-      cb(null, true);
-      return;
+      return cb(null, true);
     }
 
     const err = new Error("Загружен не файл изображения!");
-    err.status = 400;
+    err.status = HttpCode.BAD_REQUEST;
     cb(err);
   },
 });
