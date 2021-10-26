@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const Users = require("../repository/users");
+const EmailService = require("../service/email");
 const { HttpCode } = require("../service/constants");
 const jimp = require("jimp");
 const fs = require("fs/promises");
@@ -15,28 +16,11 @@ cloudinary.config({
   api_secret: process.env.API_SECRET_CLOUD,
 });
 
-const ff = async (req, res, next) => {
-  try {
-    return res.status(HttpCode.OK).json({
-      status: "success",
-      code: HttpCode.OK,
-      data: {
-        user: {
-          massage: "ПРИВЕТТТТТТТТТТТ",
-        },
-      },
-    });
-  } catch (e) {
-    next(e);
-  }
-};
-
 const uploadToCloud = promisify(cloudinary.uploader.upload);
 
 const signup = async (req, res, next) => {
   try {
-    const { email } = req.body;
-    const user = await Users.findByEmail(email);
+    const user = await Users.findByEmail(req.body.email);
 
     if (user) {
       return res.status(HttpCode.CONFLICT).json({
@@ -47,15 +31,21 @@ const signup = async (req, res, next) => {
     }
 
     const newUser = await Users.create(req.body);
+    const { id, name, email, subscription, avatarURL, verifyToken } = newUser;
+    try {
+      const emailService = new EmailService(process.env.NODE_ENV);
+      await emailService.sendVerifyEmail(verifyToken, email, name);
+    } catch (e) {
+      console.log(e.message);
+    }
     return res.status(HttpCode.CREATED).json({
       status: "success",
       code: HttpCode.CREATED,
-      data: {
-        user: {
-          email: newUser.email,
-          subscription: newUser.subscription,
-          avatarURL: newUser.avatarURL,
-        },
+      user: {
+        id,
+        email,
+        subscription,
+        avatarURL,
       },
     });
   } catch (e) {
@@ -67,9 +57,9 @@ const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await Users.findByEmail(email);
-    const isValidPassword = await user.validPassword(password);
+    const isValidPassword = await user?.validPassword(password);
 
-    if (!user || !isValidPassword) {
+    if (!user || !isValidPassword || !user.verify) {
       return res.status(HttpCode.UNAUTHORIZED).json({
         status: "Error",
         code: HttpCode.UNAUTHORIZED,
@@ -204,6 +194,50 @@ const saveAvatarUserToCloud = async (req) => {
   return { idCloudAvatar, avatarUrl };
 };
 
+const verify = async (req, res, next) => {
+  try {
+    const user = await Users.findByVerifyTokenEmail(req.params.verificationToken);
+    if (user) {
+      await Users.updateVerifyToken(user.id, true, null);
+      return res.status(HttpCode.OK).json({
+        status: "success",
+        code: HttpCode.OK,
+        data: { message: "Verification successful" },
+      });
+    }
+    return res.status(HttpCode.NOT_FOUND).json({
+      status: "error",
+      code: HttpCode.NOT_FOUND,
+      message: "Invalid token. Contact to administration",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const repeatEmailVerify = async (req, res, next) => {
+  try {
+    const user = await Users.findByEmail(req.body.email);
+    if (user) {
+      const { name, verifyTokenEmail, email } = user;
+      const emailService = new EmailService(process.env.NODE_ENV);
+      await emailService.sendVerifyEmail(verifyTokenEmail, email, name);
+      return res.status(HttpCode.OK).json({
+        status: "success",
+        code: HttpCode.OK,
+        data: { message: "Verification email resubmitted" },
+      });
+    }
+    return res.status(HttpCode.NOT_FOUND).json({
+      status: "error",
+      code: HttpCode.NOT_FOUND,
+      message: "User not found",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -211,7 +245,9 @@ module.exports = {
   currentUser,
   updateSub,
   updateAvatar,
-  ff,
+  verify,
+  repeatEmailVerify,
+
   // saveAvatarUser,
   // saveAvatarUserToCloud,
 };

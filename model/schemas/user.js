@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
 const gravatar = require("gravatar");
+const shortid = require("shortid");
 const bcrypt = require("bcryptjs");
 const SALT_FACTOR = 6;
 
@@ -8,11 +9,11 @@ const userSchema = new Schema(
   {
     password: {
       type: String,
-      required: ["true", "This fild is required"],
+      required: ["true", "Password is required"],
     },
     email: {
       type: String,
-      required: ["true", "This fild is required"],
+      required: ["true", "Email is required"],
       unique: true,
       validate(value) {
         const reg = /\S+@\S+\.\S+/;
@@ -36,7 +37,18 @@ const userSchema = new Schema(
         return gravatar.url(this.email, { s: "250" }, true);
       },
     },
+
+    verify: {
+      type: Boolean,
+      default: false,
+    },
+    verifyToken: {
+      type: String,
+      required: [true, "Verify token is required"],
+      default: shortid.generate(),
+    },
   },
+
   {
     versionKey: false,
     timestamps: true,
