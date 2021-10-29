@@ -10,7 +10,7 @@ const uploadAvatar = require("../../service/upload-avatar");
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 3, // limit each IP to 100 requests per windowMs
+  max: 5, // limit each IP to 100 requests per windowMs
   handler: (req, res, next) => {
     return res.status(HttpCode.TOO_MANY_REQUESTS).json({
       status: "error",
@@ -20,12 +20,13 @@ const limiter = rateLimit({
   },
 });
 
-router.get("/", userController.ff);
 router.post("/signup", validateAuth, userController.signup);
 router.post("/login", validateAuth, limiter, userController.login);
 router.post("/logout", guard, userController.logout);
 router.get("/current", guard, userController.currentUser);
 router.patch("/", guard, validateUpdateSub, userController.updateSub);
 router.patch("/avatars", uploadAvatar.single("avatar"), guard, userController.updateAvatar);
+router.get("/verify/:verificationToken", userController.verify);
+router.post("/verify", userController.repeatEmailVerify);
 
 module.exports = router;
